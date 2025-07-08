@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Control Horarios Audiovisual</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body { font-family: sans-serif; margin: 20px; }
+    input, button { margin: 10px 5px; padding: 15px; font-size: 16px; border-radius: 8px; }
+    button { background-color: #007bff; color: white; border: none; cursor: pointer; }
+    button:hover { background-color: #0056b3; }
+  </style>
+</head>
+<body>
+
+<h2>🕒 Control de Horarios - Equipo Audiovisual</h2>
+
+<label for="nombre">Nombre del trabajador:</label><br>
+<input type="text" id="nombre" placeholder="Ej: Juan Pérez"><br><br>
+
+<button onclick="registrarEvento('Inicio Jornada')">✅ Iniciar Jornada</button>
+<button onclick="registrarEvento('Fin Jornada')">⏹ Finalizar Jornada</button><br>
+<button onclick="registrarEvento('Inicio Hora Extra')">🕘 Iniciar Hora Extra</button>
+<button onclick="registrarEvento('Fin Hora Extra')">🕙 Finalizar Hora Extra</button>
+
+<script>
+const WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbxbc67AWA5vZx0O54vIUno86tCpKBZVKTy3g-wc1JDt_jttomNrvofuVsgx_pP_7IIv/exec";
+
+function registrarEvento(tipo) {
+  const nombre = document.getElementById("nombre").value.trim();
+  if (!nombre) {
+    alert("Por favor, ingresa tu nombre.");
+    return;
+  }
+
+  if (!navigator.geolocation) {
+    alert("Tu navegador no soporta geolocalización.");
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+    (pos) => {
+      const fechaHora = new Date().toLocaleString();
+      const latitud = pos.coords.latitude.toFixed(6);
+      const longitud = pos.coords.longitude.toFixed(6);
+
+      const datos = {
+        nombre,
+        tipo,
+        fechaHora,
+        latitud,
+        longitud
+      };
+
+      fetch(WEBHOOK_URL, {
+        method: "POST",
+        body: JSON.stringify(datos),
+        headers: { "Content-Type": "application/json" }
+      })
+      .then(res => {
+        if (res.ok) {
+          alert("✅ Registro enviado correctamente.");
+          document.getElementById("nombre").value = "";
+        } else {
+          alert("⚠️ Error al enviar los datos.");
+        }
+      })
+      .catch(err => {
+        alert("❌ Error de red: " + err.message);
+      });
+    },
+    (err) => {
+      alert("No se pudo obtener la ubicación: " + err.message);
+    }
+  );
+}
+</script>
+
+</body>
+</html>
